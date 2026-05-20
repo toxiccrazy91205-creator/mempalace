@@ -1,0 +1,93 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Pyinstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nosenv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.coverage
+.coverage.*
+
+# Virtual Environments
+.venv
+venv/
+ENV/
+env/
+active_venv/
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+*.swp
+*.swo
+.project
+.pydevproject
+.settings/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Django Specific
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+django_mempalace/db.sqlite3
+django_mempalace/db.sqlite3-journal
+django_mempalace/static/
+django_mempalace/staticfiles/
+
+# MemPalace databases & local storage
+.mempalace/
+django_mempalace/.mempalace/
+palace/
+knowledge_graph.sqlite3
+knowledge_graph.sqlite3-journal
+
+# Secrets & Environment variables
+.env
+.env.*
+secrets.json
+django_mempalace/.env
+django_mempalace/.env.*

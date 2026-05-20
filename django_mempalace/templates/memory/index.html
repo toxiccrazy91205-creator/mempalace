@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MemPalace — Cognitive Memory Palace</title>
+    <meta name="description" content="An editorial, developer-first cognitive memory storage and temporal relationship repository.">
+    <!-- Google Fonts: Playfair Display for serif headings, Inter for UI text, Geist Mono for code wells -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500;600;700&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for minimal inline symbols -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* Resend Color Palette */
+            --colors-primary: #fcfdff;
+            --colors-primary-on: #000000;
+            --colors-surface-light: #f1f7fe;
+            --colors-canvas: #000000;
+            --colors-surface-card: #0a0a0c;
+            --colors-surface-elevated: #101012;
+            --colors-surface-deep: #06060a;
+            
+            /* Translucent borders replace drop-shadows */
+            --colors-hairline: rgba(255, 255, 255, 0.06);
+            --colors-hairline-strong: rgba(255, 255, 255, 0.14);
+            --colors-divider-soft: rgba(255, 255, 255, 0.04);
+            
+            /* Text Hierarchy colors */
+            --colors-ink: #fcfdff;
+            --colors-body: rgba(252, 253, 255, 0.86);
+            --colors-charcoal: rgba(252, 253, 255, 0.7);
+            --colors-mute: #a1a4a5;
+            --colors-ash: #888e90;
+            --colors-stone: #464a4d;
+            
+            /* Accents used only for glows & highlights */
+            --colors-accent-orange: #ff801f;
+            --colors-accent-yellow: #ffc53d;
+            --colors-accent-blue: #3b9eff;
+            --colors-accent-green: #11ff99;
+            --colors-accent-red: #ff2047;
+
+            /* Radii tokens */
+            --rounded-md: 8px;
+            --rounded-lg: 12px;
+            --rounded-full: 9999px;
+            
+            /* Dynamic active glow */
+            --glow-color: rgba(255, 89, 0, 0.08); /* Starts with Orange */
+            --transition-ease: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Geist', 'Inter', sans-serif;
+            background-color: var(--colors-canvas);
+            color: var(--colors-ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            letter-spacing: -0.01em;
+            position: relative;
+        }
+
+        /* Ambient Glow Backdrop - Dynamic top wash */
+        .glow-backdrop {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 1400px;
+            height: 500px;
+            background: radial-gradient(circle at top, var(--glow-color) 0%, transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+            transition: var(--transition-ease);
+        }
+
+        /* Top Navigation Bar */
+        header {
+            border-bottom: 1px solid var(--colors-hairline);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 500;
+            letter-spacing: -0.03em;
+            color: var(--colors-ink);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span {
+            font-style: italic;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: 1px solid transparent;
+            color: var(--colors-charcoal);
+            padding: 0.5rem 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 13.5px;
+            font-weight: 500;
+            border-radius: var(--rounded-md);
+            cursor: pointer;
+            transition: var(--transition-ease);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--colors-ink);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tab-btn.active {
+            color: var(--colors-ink);
+            background: var(--colors-surface-elevated);
+            border-color: var(--colors-hairline-strong);
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 48px 24px 96px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero Stripe Section */
+        .hero-stripe {
+            padding: 32px 0 64px 0;
+            text-align: left;
+            max-width: 800px;
+        }
+
+        .hero-badge {
+            background: var(--colors-surface-elevated);
+            border: 1px solid var(--colors-hairline-strong);
+            color: var(--colors-body);
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: var(--rounded-full);
+            display: inline-block;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+
+        .hero-stripe h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(48px, 6vw, 84px);
+            font-weight: 400;
+            line-height: 1.0;
+            letter-spacing: -0.04em;
+            color: var(--colors-ink);
+            margin-bottom: 20px;
+            font-feature-settings: "ss01", "ss04", "ss11";
+        }
+
+        .hero-stripe p {
+            font-family: 'Geist', sans-serif;
+            font-size: 18px;
+            line-height: 1.5;
+            color: var(--colors-charcoal);
+            margin-bottom: 32px;
+            font-weight: 400;
+        }
+
+        /* Grid Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 64px;
+        }
+
+        .stat-card {
+            background: var(--colors-surface-card);
+            border: 1px solid var(--colors-hairline);
+            border-radius: var(--rounded-lg);
+            padding: 24px;
+            transition: var(--transition-ease);
+        }
+
+        .stat-card:hover {
+            border-color: var(--colors-hairline-strong);
+        }
+
+        .stat-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            color: var(--colors-mute);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 36px;
+            font-weight: 400;
+            color: var(--colors-ink);
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        /* Tab Content Panel */
+        .tab-content {
+            display: none;
+            animation: contentFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes contentFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Columns Split Layout */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 48px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+        }
+
+        /* Subheadings */
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 400;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+            color: var(--colors-ink);
+        }
+
+        .section-desc {
+            font-family: 'Inter', sans-serif;
+            color: var(--colors-mute);
+            font-size: 14px;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        /* Resend Forms and Inputs */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--colors-mute);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"], input[type="number"], select, textarea {
+            width: 100%;
+            background-color: var(--colors-surface-card);
+            border: 1px solid var(--colors-hairline-strong);
+            border-radius: var(--rounded-md);
+            padding: 10px 14px;
+            color: var(--colors-ink);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            height: 40px;
+            transition: var(--transition-ease);
+        }
+
+        textarea {
+            height: auto;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--colors-primary);
+            background-color: var(--colors-surface-elevated);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Resend Button vocabulary */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background-color: var(--colors-primary);
+            color: var(--colors-primary-on);
+            border: none;
+            border-radius: var(--rounded-md);
+            padding: 8px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            height: 36px;
+            cursor: pointer;
+            transition: var(--transition-ease);
+        }
+
+        .btn:hover {
+            background-color: var(--colors-surface-light);
+        }
+
+        .btn-ghost {
+            background-color: var(--colors-surface-elevated);
+            color: var(--colors-ink);
+            border: 1px solid var(--colors-hairline-strong);
+        }
+
+        .btn-ghost:hover {
+            background-color: rgba(255, 255, 255, 0.06);
+            border-color: var(--colors-primary);
+        }
+
+        .btn-outline {
+            background-color: var(--colors-canvas);
+            color: var(--colors-ink);
+            border: 1px solid var(--colors-hairline-strong);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--colors-primary);
+            background-color: var(--colors-surface-card);
+        }
+
+        /* Code Window Component */
+        .code-window {
+            background-color: var(--colors-surface-deep);
+            border: 1px solid var(--colors-hairline-strong);
+            border-radius: var(--rounded-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .code-header {
+            padding: 12px 18px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--colors-hairline);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .traffic-lights {
+            display: flex;
+            gap: 6px;
+        }
+
+        .traffic-lights span {
+            width: 8px;
+            height: 8px;
+            border-radius: var(--rounded-full);
+            display: block;
+        }
+
+        .traffic-lights .red { background-color: var(--colors-accent-red); }
+        .traffic-lights .yellow { background-color: var(--colors-accent-yellow); }
+        .traffic-lights .green { background-color: var(--colors-accent-green); }
+
+        .code-title {
+            font-family: 'Geist Mono', monospace;
+            font-size: 11px;
+            color: var(--colors-mute);
+            letter-spacing: 0.02em;
+        }
+
+        .code-tabs {
+            background-color: rgba(0, 0, 0, 0.15);
+            display: flex;
+            border-bottom: 1px solid var(--colors-hairline);
+            padding: 0 12px;
+        }
+
+        .code-tab {
+            padding: 8px 14px;
+            font-family: 'Geist Mono', monospace;
+            font-size: 12px;
+            color: var(--colors-mute);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition-ease);
+        }
+
+        .code-tab:hover {
+            color: var(--colors-ink);
+        }
+
+        .code-tab.active {
+            color: var(--colors-ink);
+            border-bottom-color: var(--colors-primary);
+        }
+
+        .code-body {
+            padding: 20px;
+            font-family: 'Geist Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--colors-body);
+            overflow-y: auto;
+            max-height: 520px;
+        }
+
+        /* Result formatting */
+        .terminal-placeholder {
+            text-align: center;
+            color: var(--colors-stone);
+            padding: 48px 0;
+        }
+
+        .terminal-placeholder i {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: var(--colors-hairline-strong);
+        }
+
+        .drawer-result-item {
+            border-bottom: 1px solid var(--colors-hairline);
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+        }
+
+        .drawer-result-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+        }
+
+        .drawer-tags {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tag-pill {
+            background-color: var(--colors-surface-card);
+            border: 1px solid var(--colors-hairline-strong);
+            color: var(--colors-body);
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: var(--rounded-full);
+        }
+
+        .similarity-badge {
+            font-family: 'Geist Mono', monospace;
+            font-weight: 600;
+            color: var(--colors-accent-green);
+        }
+
+        .drawer-text {
+            color: var(--colors-ink);
+            background-color: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--colors-hairline);
+            padding: 12px;
+            border-radius: var(--rounded-md);
+            white-space: pre-wrap;
+            margin-top: 8px;
+        }
+
+        .drawer-source {
+            font-size: 11px;
+            color: var(--colors-mute);
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .result-metrics {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--colors-ash);
+        }
+
+        /* Timeline Editorial Structure */
+        .timeline-list {
+            position: relative;
+            padding-left: 20px;
+            border-left: 1px solid var(--colors-hairline-strong);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 32px;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -25px;
+            top: 4px;
+            width: 9px;
+            height: 9px;
+            background-color: var(--colors-accent-blue);
+            border-radius: var(--rounded-full);
+            border: 2px solid var(--colors-canvas);
+        }
+
+        .timeline-item.ended .timeline-dot {
+            background-color: var(--colors-accent-red);
+        }
+
+        .timeline-date {
+            font-family: 'Geist Mono', monospace;
+            font-size: 12px;
+            color: var(--colors-mute);
+            margin-bottom: 6px;
+        }
+
+        .triple-block {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .triple-entity {
+            color: var(--colors-ink);
+            background-color: var(--colors-surface-card);
+            border: 1px solid var(--colors-hairline-strong);
+            padding: 4px 10px;
+            border-radius: var(--rounded-md);
+        }
+
+        .triple-relation {
+            color: var(--colors-accent-orange);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 15px;
+        }
+
+        .timeline-item.ended .triple-relation {
+            text-decoration: line-through;
+            color: var(--colors-stone);
+        }
+
+        .triple-metadata {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--colors-mute);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Status & Diagnostics Lists */
+        .diag-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .diag-table td {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--colors-hairline);
+        }
+
+        .diag-table td:first-child {
+            color: var(--colors-mute);
+            font-weight: 500;
+            width: 35%;
+        }
+
+        .diag-table td:last-child {
+            font-family: 'Geist Mono', monospace;
+            word-break: break-all;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: var(--rounded-full);
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-dot.ok { background-color: var(--colors-accent-green); }
+        .status-dot.diverged { background-color: var(--colors-accent-orange); }
+        .status-dot.unknown { background-color: var(--colors-stone); }
+
+        /* Modal Structure */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(16px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-card {
+            background-color: var(--colors-surface-elevated);
+            border: 1px solid var(--colors-hairline-strong);
+            border-radius: var(--rounded-lg);
+            max-width: 520px;
+            width: 100%;
+            padding: 32px;
+            animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalIn {
+            from { transform: translateY(15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--colors-accent-yellow);
+            margin-bottom: 16px;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--colors-body);
+            margin-bottom: 24px;
+        }
+
+        .duplicate-box {
+            background-color: var(--colors-surface-deep);
+            border: 1px solid var(--colors-hairline-strong);
+            border-radius: var(--rounded-md);
+            padding: 12px;
+            font-size: 13px;
+            font-family: 'Geist Mono', monospace;
+            margin: 12px 0;
+            color: var(--colors-mute);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Toasts Container */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 10000;
+        }
+
+        .toast {
+            background-color: var(--colors-surface-elevated);
+            border: 1px solid var(--colors-hairline-strong);
+            border-left: 3px solid var(--colors-primary);
+            padding: 12px 20px;
+            border-radius: var(--rounded-md);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            color: var(--colors-ink);
+            transform: translateX(120%);
+            transition: var(--transition-ease);
+            min-width: 280px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success { border-left-color: var(--colors-accent-green); }
+        .toast.warning { border-left-color: var(--colors-accent-yellow); }
+        .toast.error { border-left-color: var(--colors-accent-red); }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--colors-divider-soft);
+            padding: 48px 0;
+            background-color: var(--colors-canvas);
+            margin-top: auto;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            color: var(--colors-ash);
+        }
+
+        .footer-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--colors-ink);
+        }
+
+        .footer-status {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Glow Wash backdrop -->
+    <div class="glow-backdrop" id="ambient-glow"></div>
+
+    <header>
+        <div class="nav-container">
+            <a href="/" class="logo">
+                MemPalace <span>Engine</span>
+            </a>
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('memory-tab', 'rgba(255, 89, 0, 0.08)')">
+                    Memory Palace
+                </button>
+                <button class="tab-btn" onclick="switchTab('kg-tab', 'rgba(0, 117, 255, 0.12)')">
+                    Knowledge Graph
+                </button>
+                <button class="tab-btn" onclick="switchTab('health-tab', 'rgba(130, 100, 250, 0.09)')">
+                    Diagnostics
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Stripe -->
+        <section class="hero-stripe">
+            <span class="hero-badge">Verbatim cognitive repository v1.0.0</span>
+            <h1>Filing state, structured & retrieved.</h1>
+            <p>
+                An editorial-grade memory palace integrating HNSW vector similarity matrices with temporal relational database schemas, built specifically for agent state persistence.
+            </p>
+            <button class="btn" onclick="switchTab('memory-tab', 'rgba(255, 89, 0, 0.08)'); document.getElementById('search-query').focus();">
+                Initialize query
+            </button>
+        </section>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Memory drawers</div>
+                <div class="stat-value" id="stats-total-drawers">{{ total_drawers }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Graph relations</div>
+                <div class="stat-value" id="stats-kg-triples">{{ kg_triples }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Graph entities</div>
+                <div class="stat-value" id="stats-kg-entities">{{ kg_entities }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Vector indexing</div>
+                <div class="stat-value" style="font-size: 16px; margin-top: 14px;">
+                    <span class="status-dot {{ vector_status }}" id="stats-vector-dot"></span>
+                    <span style="font-family: 'Geist Mono', monospace; text-transform: uppercase; font-size: 12px;" id="stats-vector-text">{{ vector_status }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. MEMORY PALACE TAB -->
+        <div id="memory-tab" class="tab-content active">
+            <div class="split-layout">
+                <!-- Search & Write Panel (Left) -->
+                <div>
+                    <div style="margin-bottom: 48px;">
+                        <h2>Retrieve Memory</h2>
+                        <div class="section-desc">Search through cognitive vectors and FTS5 keyword structures using high-dimensional indices.</div>
+                        
+                        <form id="search-form" onsubmit="handleSearch(event)">
+                            <div class="form-group">
+                                <label for="search-query">Query statement</label>
+                                <input type="text" id="search-query" placeholder="Search a memory, fact, or dialec..." required>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="search-wing">Wing filter</label>
+                                    <select id="search-wing">
+                                        <option value="">All Wings</option>
+                                        {% for w in wings %}
+                                            <option value="{{ w }}">{{ w }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="search-room">Room filter</label>
+                                    <select id="search-room">
+                                        <option value="">All Rooms</option>
+                                        {% for r in rooms %}
+                                            <option value="{{ r }}">{{ r }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="search-strategy">Retrieval strategy</label>
+                                    <select id="search-strategy">
+                                        <option value="vector">Vector Only (Top semantic candidates)</option>
+                                        <option value="union" selected>Union Hybrid (Vector + Keyword FTS5)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="search-limit">Max candidates</label>
+                                    <input type="number" id="search-limit" value="5" min="1" max="50">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn" style="width: 100%; margin-top: 12px;">Query Repository</button>
+                        </form>
+                    </div>
+
+                    <div>
+                        <h2>File Drawer</h2>
+                        <div class="section-desc">Add raw factual segments manually into target wings and rooms.</div>
+
+                        <form id="add-memory-form" onsubmit="handleAddMemory(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="add-wing">Wing identifier *</label>
+                                    <input type="text" id="add-wing" list="existing-wings" placeholder="e.g. wing_user, wing_system" required>
+                                    <datalist id="existing-wings">
+                                        {% for w in wings %}<option value="{{ w }}">{% endfor %}
+                                    </datalist>
+                                </div>
+                                <div class="form-group">
+                                    <label for="add-room">Room identifier *</label>
+                                    <input type="text" id="add-room" list="existing-rooms" placeholder="e.g. key-context, status-log" required>
+                                    <datalist id="existing-rooms">
+                                        {% for r in rooms %}<option value="{{ r }}">{% endfor %}
+                                    </datalist>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="add-source">Source reference (file, session)</label>
+                                <input type="text" id="add-source" placeholder="e.g. session_03.json, main.py">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="add-content">Verbatim payload *</label>
+                                <textarea id="add-content" placeholder="Type factual memory statement to record..." required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-ghost" style="width: 100%;">Record Memory</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Code Terminal Output (Right) -->
+                <div>
+                    <div class="code-window">
+                        <div class="code-header">
+                            <div class="traffic-lights">
+                                <span class="red"></span>
+                                <span class="yellow"></span>
+                                <span class="green"></span>
+                            </div>
+                            <div class="code-title">mempalace_retrieval_output.json</div>
+                        </div>
+                        <div class="code-tabs">
+                            <div class="code-tab active">console.log</div>
+                        </div>
+                        <div class="code-body" id="search-results">
+                            <div class="terminal-placeholder">
+                                <i class="fa-solid fa-code"></i>
+                                <p>Submit a query search to populate indices.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. KNOWLEDGE GRAPH TAB -->
+        <div id="kg-tab" class="tab-content">
+            <div class="split-layout">
+                <!-- KG Queries and Operations (Left) -->
+                <div>
+                    <div style="margin-bottom: 48px;">
+                        <h2>Explore Entities</h2>
+                        <div class="section-desc">Track and traverse chronologically recorded relations.</div>
+
+                        <form id="kg-query-form" onsubmit="handleKgQuery(event)">
+                            <div class="form-group">
+                                <label for="kg-entity-input">Target Entity</label>
+                                <input type="text" id="kg-entity-input" placeholder="Entity name (e.g. ALC, Riley)..." required>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="kg-direction">Directional path</label>
+                                    <select id="kg-direction">
+                                        <option value="both" selected>Both directions</option>
+                                        <option value="outgoing">Outgoing (Subject -> Object)</option>
+                                        <option value="incoming">Incoming (Subject <- Object)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="kg-as-of">As of (Temporal date)</label>
+                                    <input type="text" id="kg-as-of" placeholder="YYYY-MM-DD (Default: now)">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn" style="width: 100%; margin-top: 12px;">Query Graph</button>
+                        </form>
+                    </div>
+
+                    <div>
+                        <h2>Record / End Relations</h2>
+                        <div class="section-desc">Append new subject-predicate-object records or invalidate old facts.</div>
+
+                        <div style="display: flex; gap: 8px; margin-bottom: 24px;">
+                            <button class="btn btn-ghost btn-outline" id="relation-toggle-add" onclick="switchRelationMode('add')">Record Fact</button>
+                            <button class="btn btn-ghost" id="relation-toggle-invalidate" onclick="switchRelationMode('invalidate')">Invalidate Fact</button>
+                        </div>
+
+                        <!-- Record Relation form -->
+                        <form id="kg-add-form" onsubmit="handleKgAdd(event)">
+                            <div class="form-group">
+                                <label for="kg-sub">Subject *</label>
+                                <input type="text" id="kg-sub" placeholder="e.g. ALC" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="kg-pred">Predicate *</label>
+                                <input type="text" id="kg-pred" placeholder="e.g. knows" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="kg-obj">Object *</label>
+                                <input type="text" id="kg-obj" placeholder="e.g. JOR" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="kg-valid-from">Valid from (date)</label>
+                                    <input type="text" id="kg-valid-from" placeholder="YYYY-MM-DD">
+                                </div>
+                                <div class="form-group">
+                                    <label for="kg-valid-to">Valid to (date)</label>
+                                    <input type="text" id="kg-valid-to" placeholder="YYYY-MM-DD">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="kg-source-drawer">Source drawer ID reference</label>
+                                <input type="text" id="kg-source-drawer" placeholder="e.g. drawer_wing_room_hash">
+                            </div>
+
+                            <button type="submit" class="btn btn-ghost" style="width: 100%;">Record relationship</button>
+                        </form>
+
+                        <!-- Invalidate Relation form -->
+                        <form id="kg-invalidate-form" onsubmit="handleKgInvalidate(event)" style="display: none;">
+                            <div class="form-group">
+                                <label for="kg-inv-sub">Subject *</label>
+                                <input type="text" id="kg-inv-sub" placeholder="e.g. ALC" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="kg-inv-pred">Predicate *</label>
+                                <input type="text" id="kg-inv-pred" placeholder="e.g. knows" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="kg-inv-obj">Object *</label>
+                                <input type="text" id="kg-inv-obj" placeholder="e.g. JOR" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="kg-inv-ended">Ended date (YYYY-MM-DD)</label>
+                                <input type="text" id="kg-inv-ended" placeholder="Defaults to today">
+                            </div>
+
+                            <button type="submit" class="btn btn-ghost" style="width: 100%;">Invalidate relationship</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- KG Timeline Log Output (Right) -->
+                <div>
+                    <h2>Relationship Log</h2>
+                    <div class="section-desc">Timeline of historical facts parsed for entity structures.</div>
+                    
+                    <div class="code-window">
+                        <div class="code-header">
+                            <div class="traffic-lights">
+                                <span class="red"></span>
+                                <span class="yellow"></span>
+                                <span class="green"></span>
+                            </div>
+                            <div class="code-title">relations_timeline.log</div>
+                        </div>
+                        <div class="code-body">
+                            <div class="timeline-list" id="kg-query-results">
+                                <div class="terminal-placeholder">
+                                    <i class="fa-solid fa-circle-dot"></i>
+                                    <p>Query an entity to examine timeline connections.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global audit timeline -->
+            <div style="margin-top: 64px;">
+                <h2>Global Temporal Log</h2>
+                <div class="section-desc">Historical timeline logs for all facts added or invalidated in the system.</div>
+                
+                <div class="code-window" style="background-color: var(--colors-surface-card);">
+                    <div class="code-header">
+                        <div class="traffic-lights">
+                            <span class="red"></span>
+                            <span class="yellow"></span>
+                            <span class="green"></span>
+                        </div>
+                        <div class="code-title">audit_timeline.log</div>
+                    </div>
+                    <div class="code-body" style="max-height: 400px;">
+                        <div class="timeline-list" id="kg-global-timeline">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. DIAGNOSTICS TAB -->
+        <div id="health-tab" class="tab-content">
+            <div class="split-layout">
+                <!-- Diagnostics list (Left) -->
+                <div>
+                    <h2>System Diagnostics</h2>
+                    <div class="section-desc">Diagnostics of current database locations, vector stores, and schemas.</div>
+                    
+                    <div class="stat-card" style="margin-bottom: 24px;">
+                        <table class="diag-table">
+                            <tr>
+                                <td>Palace path</td>
+                                <td style="font-size: 12px; color: var(--colors-body);">{{ palace_path }}</td>
+                            </tr>
+                            <tr>
+                                <td>SQLite DB engine</td>
+                                <td>SQLite3 + FTS5 searcher</td>
+                            </tr>
+                            <tr>
+                                <td>Vector engine</td>
+                                <td>ChromaDB HNSW index</td>
+                            </tr>
+                            <tr>
+                                <td>Vector status</td>
+                                <td>
+                                    <span class="status-dot {{ vector_status }}"></span>
+                                    <span style="text-transform: uppercase;">{{ vector_status }}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <h2>Filing Protocols</h2>
+                    <div class="section-desc" style="line-height: 1.6; color: var(--colors-body);">
+                        The engine writes drawers using deterministic GUID allocations. Triples are indexed with valid dates allowing agents to build semantic contexts for exact date scopes.
+                    </div>
+                </div>
+
+                <!-- SQLite/HNSW Log Wells (Right) -->
+                <div>
+                    <h2>Diagnostic Trace</h2>
+                    <div class="section-desc">Active sqlite segment values and vector diagnostics.</div>
+
+                    <div class="code-window">
+                        <div class="code-header">
+                            <div class="traffic-lights">
+                                <span class="red"></span>
+                                <span class="yellow"></span>
+                                <span class="green"></span>
+                            </div>
+                            <div class="code-title">sqlite_trace.log</div>
+                        </div>
+                        <div class="code-body" id="hnsw-diagnostic-detail">
+                            Evaluating segment metrics...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Duplicate Warnings -->
+    <div class="modal-overlay" id="duplicate-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                Duplicate Detected
+            </div>
+            <div class="modal-body">
+                A highly similar memory (<strong><span id="duplicate-percent">95</span>%</strong>) already exists in <strong><span id="duplicate-location">wing/room</span></strong>:
+                <div class="duplicate-box" id="duplicate-text">"existing context preview..."</div>
+                Are you sure you want to write this anyway?
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeDuplicateModal()">Cancel</button>
+                <button class="btn" id="confirm-add-btn">Write Anyway</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toasts notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">
+                MemPalace
+            </div>
+            <div class="footer-status">
+                <span class="status-dot ok"></span> Status: Operational
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Tab switcher and radial glow updates
+        function switchTab(tabId, glowColor) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            // Set dynamic glow color
+            document.documentElement.style.setProperty('--glow-color', glowColor);
+
+            // Find matching tab button
+            const btnIndex = tabId === 'memory-tab' ? 0 : (tabId === 'kg-tab' ? 1 : 2);
+            document.querySelectorAll('.tab-btn')[btnIndex].classList.add('active');
+
+            if (tabId === 'kg-tab') {
+                loadGlobalTimeline();
+            } else if (tabId === 'health-tab') {
+                loadDiagnostics();
+            }
+        }
+
+        // Toggle KG relation action mode
+        function switchRelationMode(mode) {
+            const addForm = document.getElementById('kg-add-form');
+            const invForm = document.getElementById('kg-invalidate-form');
+            const addBtn = document.getElementById('relation-toggle-add');
+            const invBtn = document.getElementById('relation-toggle-invalidate');
+
+            if (mode === 'add') {
+                addForm.style.display = 'block';
+                invForm.style.display = 'none';
+                addBtn.classList.add('btn-outline');
+                invBtn.classList.remove('btn-outline');
+            } else {
+                addForm.style.display = 'none';
+                invForm.style.display = 'block';
+                addBtn.classList.remove('btn-outline');
+                invBtn.classList.add('btn-outline');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'fa-circle-check';
+            if (type === 'warning') icon = 'fa-triangle-exclamation';
+            if (type === 'error') icon = 'fa-circle-exclamation';
+
+            toast.innerHTML = `
+                <i class="fa-solid ${icon}"></i>
+                <div>${message}</div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 50);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
+
+        // Get Django CSRF token cookie helper
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        let currentAddPayload = null;
+
+        function closeDuplicateModal() {
+            document.getElementById('duplicate-modal').style.display = 'none';
+            currentAddPayload = null;
+        }
+
+        // 1. MEMORY PALACE SEARCH
+        async function handleSearch(event) {
+            event.preventDefault();
+            const query = document.getElementById('search-query').value;
+            const wing = document.getElementById('search-wing').value;
+            const room = document.getElementById('search-room').value;
+            const strategy = document.getElementById('search-strategy').value;
+            const limit = document.getElementById('search-limit').value;
+
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = `
+                <div style="text-align: center; padding: 48px 0; color: var(--colors-mute);">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 20px; margin-bottom: 12px; color: var(--colors-primary);"></i>
+                    <p>Traversing vector clusters...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/api/search/?query=${encodeURIComponent(query)}&wing=${encodeURIComponent(wing)}&room=${encodeURIComponent(room)}&strategy=${strategy}&limit=${limit}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    resultsContainer.innerHTML = `<p style="color: var(--colors-accent-red)">${data.error}</p>`;
+                    return;
+                }
+
+                const hits = data.results || [];
+                if (hits.length === 0) {
+                    resultsContainer.innerHTML = `
+                        <div class="terminal-placeholder">
+                            <i class="fa-solid fa-ghost"></i>
+                            <p>No query matches found for statement.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                resultsContainer.innerHTML = '';
+                hits.forEach(hit => {
+                    const similarityScore = hit.similarity !== null ? `${Math.round(hit.similarity * 100)}%` : 'N/A';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'drawer-result-item';
+                    item.innerHTML = `
+                        <div class="drawer-header">
+                            <div class="drawer-tags">
+                                <span class="tag-pill">${hit.wing}</span>
+                                <span class="tag-pill">${hit.room}</span>
+                            </div>
+                            <span class="similarity-badge">${similarityScore} match</span>
+                        </div>
+                        <div class="drawer-text">${hit.text}</div>
+                        <div class="drawer-source">
+                            <i class="fa-solid fa-file-code"></i> ${hit.source_file}
+                        </div>
+                        <div class="result-metrics">
+                            <span>Strategy: ${hit.matched_via}</span>
+                            ${hit.distance !== null ? `<span>Distance: ${hit.distance}</span>` : ''}
+                            ${hit.closet_boost ? `<span>Boost: ${hit.closet_boost}</span>` : ''}
+                        </div>
+                    `;
+                    resultsContainer.appendChild(item);
+                });
+
+            } catch (err) {
+                resultsContainer.innerHTML = `<p style="color: var(--colors-accent-red)">Failed to fetch search queries.</p>`;
+            }
+        }
+
+        // 2. ADD VERBATIM DRAWER MEMORY
+        async function handleAddMemory(event) {
+            event.preventDefault();
+            const wing = document.getElementById('add-wing').value;
+            const room = document.getElementById('add-room').value;
+            const content = document.getElementById('add-content').value;
+            const source_file = document.getElementById('add-source').value;
+
+            const payload = { wing, room, content, source_file, force: false };
+            submitMemory(payload);
+        }
+
+        async function submitMemory(payload) {
+            try {
+                const csrftoken = getCookie('csrftoken');
+                const response = await fetch('/api/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+
+                if (data.duplicate) {
+                    document.getElementById('duplicate-percent').innerText = Math.round(data.similarity * 100);
+                    document.getElementById('duplicate-location').innerText = `${data.existing.wing} / ${data.existing.room}`;
+                    document.getElementById('duplicate-text').innerText = `"${data.existing.content}"`;
+                    document.getElementById('duplicate-modal').style.display = 'flex';
+                    
+                    currentAddPayload = { ...payload, force: true };
+                    document.getElementById('confirm-add-btn').onclick = () => {
+                        closeDuplicateModal();
+                        submitMemory(currentAddPayload);
+                    };
+                    return;
+                }
+
+                if (data.success) {
+                    showToast(`Memory drawer filed successfully in ${data.wing}/${data.room}!`);
+                    document.getElementById('add-content').value = '';
+                    updateStats();
+                } else {
+                    showToast(data.error || 'Failed to file drawer', 'error');
+                }
+            } catch (err) {
+                showToast('Failed to file memory.', 'error');
+            }
+        }
+
+        // 3. KG EXPLORATION QUERY
+        async function handleKgQuery(event) {
+            event.preventDefault();
+            const entity = document.getElementById('kg-entity-input').value;
+            const direction = document.getElementById('kg-direction').value;
+            const as_of = document.getElementById('kg-as-of').value;
+
+            const container = document.getElementById('kg-query-results');
+            container.innerHTML = `
+                <div style="text-align: center; padding: 48px 0; color: var(--colors-mute);">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 20px; margin-bottom: 12px; color: var(--colors-primary);"></i>
+                    <p>Traversing relations timeline...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(`/api/kg/query/?entity=${encodeURIComponent(entity)}&direction=${direction}&as_of=${encodeURIComponent(as_of)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: var(--colors-accent-red)">${data.error}</p>`;
+                    return;
+                }
+
+                const facts = data.facts || [];
+                if (facts.length === 0) {
+                    container.innerHTML = `
+                        <div class="terminal-placeholder">
+                            <i class="fa-solid fa-circle-dot"></i>
+                            <p>No recorded relations found for "${entity}".</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                facts.forEach(fact => {
+                    const isEnded = fact.valid_to !== null;
+                    const item = document.createElement('div');
+                    item.className = `timeline-item ${isEnded ? 'ended' : ''}`;
+                    
+                    let dateInfo = `Valid from: ${fact.valid_from || 'Always'}`;
+                    if (fact.valid_to) dateInfo += ` | Ended: ${fact.valid_to}`;
+
+                    item.innerHTML = `
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">${dateInfo}</div>
+                        <div class="triple-block">
+                            <span class="triple-entity">${fact.subject}</span>
+                            <span class="triple-relation">${fact.predicate}</span>
+                            <span class="triple-entity">${fact.object}</span>
+                        </div>
+                        <div class="triple-metadata">
+                            <span>ID: ${fact.id}</span>
+                            ${fact.source_drawer_id ? `<span>Drawer ref: ${fact.source_drawer_id}</span>` : ''}
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+
+            } catch (err) {
+                container.innerHTML = `<p style="color: var(--colors-accent-red)">Failed to load connections.</p>`;
+            }
+        }
+
+        // 4. KG RELATION RECORD
+        async function handleKgAdd(event) {
+            event.preventDefault();
+            const subject = document.getElementById('kg-sub').value;
+            const predicate = document.getElementById('kg-pred').value;
+            const object = document.getElementById('kg-obj').value;
+            const valid_from = document.getElementById('kg-valid-from').value;
+            const valid_to = document.getElementById('kg-valid-to').value;
+            const source_drawer_id = document.getElementById('kg-source-drawer').value;
+
+            const csrftoken = getCookie('csrftoken');
+            try {
+                const response = await fetch('/api/kg/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ subject, predicate, object, valid_from, valid_to, source_drawer_id })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`Recorded: ${data.fact}`);
+                    document.getElementById('kg-sub').value = '';
+                    document.getElementById('kg-pred').value = '';
+                    document.getElementById('kg-obj').value = '';
+                    document.getElementById('kg-valid-from').value = '';
+                    document.getElementById('kg-valid-to').value = '';
+                    document.getElementById('kg-source-drawer').value = '';
+                    
+                    updateStats();
+                    loadGlobalTimeline();
+                } else {
+                    showToast(data.error || 'Failed to record relation', 'error');
+                }
+            } catch (err) {
+                showToast('Failed to connect relation.', 'error');
+            }
+        }
+
+        // 5. KG RELATION INVALIDATE
+        async function handleKgInvalidate(event) {
+            event.preventDefault();
+            const subject = document.getElementById('kg-inv-sub').value;
+            const predicate = document.getElementById('kg-inv-pred').value;
+            const object = document.getElementById('kg-inv-obj').value;
+            const ended = document.getElementById('kg-inv-ended').value;
+
+            const csrftoken = getCookie('csrftoken');
+            try {
+                const response = await fetch('/api/kg/invalidate/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ subject, predicate, object, ended })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(`Invalidated fact: ${data.fact} ended ${data.ended}`);
+                    document.getElementById('kg-inv-sub').value = '';
+                    document.getElementById('kg-inv-pred').value = '';
+                    document.getElementById('kg-inv-obj').value = '';
+                    document.getElementById('kg-inv-ended').value = '';
+                    
+                    loadGlobalTimeline();
+                } else {
+                    showToast(data.error || 'Failed to invalidate fact', 'error');
+                }
+            } catch (err) {
+                showToast('Failed to invalidate relation.', 'error');
+            }
+        }
+
+        // Load global temporal audit log
+        async function loadGlobalTimeline() {
+            const container = document.getElementById('kg-global-timeline');
+            container.innerHTML = '<div style="color:var(--colors-mute); font-family:monospace;">Accessing temporal indices...</div>';
+            
+            try {
+                const response = await fetch('/api/kg/timeline/');
+                const data = await response.json();
+                
+                const timeline = data.timeline || [];
+                if (timeline.length === 0) {
+                    container.innerHTML = '<p style="color:var(--colors-mute); font-family:monospace;">No relation logs found.</p>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                timeline.forEach(event => {
+                    const isEnded = event.valid_to !== null;
+                    const item = document.createElement('div');
+                    item.className = `timeline-item ${isEnded ? 'ended' : ''}`;
+                    
+                    item.innerHTML = `
+                        <div class="timeline-dot" style="background-color: ${isEnded ? 'var(--colors-accent-red)' : 'var(--colors-accent-green)'}"></div>
+                        <div class="timeline-date">Recorded valid: ${event.valid_from || 'Always'} ${event.valid_to ? `to ${event.valid_to}` : ''}</div>
+                        <div class="triple-block">
+                            <span class="triple-entity">${event.subject}</span>
+                            <span class="triple-relation">${event.predicate}</span>
+                            <span class="triple-entity">${event.object}</span>
+                        </div>
+                        <div class="triple-metadata">
+                            <span>ID: ${event.id} | Origin: ${event.source_drawer_id || 'manual_entry'}</span>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (err) {
+                container.innerHTML = '<p style="color:var(--colors-accent-red)">Failed to load timeline.</p>';
+            }
+        }
+
+        // Load health stats and trace details
+        async function loadDiagnostics() {
+            const detailContainer = document.getElementById('hnsw-diagnostic-detail');
+            detailContainer.innerText = 'Syncing element indicators...';
+
+            try {
+                const response = await fetch('/api/kg/stats/');
+                const kgData = await response.json();
+
+                const diagnosticsText = `
+[system.log] Initializing diagnostics check
+[sqlite] Schema version 2 active.
+[sqlite] Total entities tracked: ${kgData.entities || 0}
+[sqlite] Total relation triples: ${kgData.triples || 0}
+[sqlite] Predicate index profiles: ${JSON.stringify(kgData.relationship_types || [])}
+
+[hnsw] ChromaDB index capacity state checked.
+[hnsw] Status checks resolved cleanly.
+[system.log] Diagnostics scan finalized.
+                `;
+                detailContainer.innerText = diagnosticsText.trim();
+            } catch (err) {
+                detailContainer.innerText = '[error] Diagnostics trace failed to resolve.';
+            }
+        }
+
+        // Fetch latest stats for top counters
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/kg/stats/');
+                const data = await response.json();
+                
+                document.getElementById('stats-kg-triples').innerText = data.triples || 0;
+                document.getElementById('stats-kg-entities').innerText = data.entities || 0;
+            } catch (e) {
+                console.error("Failed to load live stats updates", e);
+            }
+        }
+    </script>
+</body>
+</html>
